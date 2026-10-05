@@ -22,7 +22,7 @@ export function ThemePicker({ settings, onChange }: { settings: ThemeSettings; o
     const theme = themes.find(theme => theme.id === settings.selected)!;
     const blob = new Blob([JSON.stringify({ version: 1, name: 'My theme', base: theme.scheme === 'dark' ? 'midnight' : 'sky', colors: theme.colors }, null, 2) + '\n'], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a'); link.href = url; link.download = 'git-sky-theme.json'; link.click();
+    const link = document.createElement('a'); link.href = url; link.download = 'lantern-theme.json'; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return <>

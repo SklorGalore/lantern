@@ -4,7 +4,7 @@ const { execFileSync } = require('node:child_process');
 const os = require('node:os');
 const path = require('node:path');
 const assert = require('node:assert/strict');
-const root = mkdtempSync(path.join(os.tmpdir(), 'git-sky-smoke-'));
+const root = mkdtempSync(path.join(os.tmpdir(), 'lantern-smoke-'));
 const repo = path.join(root, 'stellar-notes');
 mkdirSync(repo); const git = (...args) => execFileSync('git', args, { cwd: repo, stdio: 'pipe' });
 git('init','--initial-branch=main');git('config','user.name','Smoke Test');git('config','user.email','smoke@example.invalid');
@@ -50,8 +50,8 @@ app.on('browser-window-created',(_event,window)=>{
     if (document.documentElement.style.colorScheme !== 'light' || document.body.innerText.includes('Smoke custom')) throw new Error('Remove custom theme failed');
     document.querySelector('.modal-close').click();
    })()`);
-   const opened = await window.webContents.executeJavaScript(`window.gitSky.request({action:'open',path:${JSON.stringify(repo)}})`);assert.equal(opened.repo.branch,'feature/welcome-screen');
-   const configured = await window.webContents.executeJavaScript(`window.gitSky.request({action:'configure',config:{production:'main',development:'develop'},createDevelop:false})`);assert.equal(configured.error,undefined);
+   const opened = await window.webContents.executeJavaScript(`window.lantern.request({action:'open',path:${JSON.stringify(repo)}})`);assert.equal(opened.repo.branch,'feature/welcome-screen');
+   const configured = await window.webContents.executeJavaScript(`window.lantern.request({action:'configure',config:{production:'main',development:'develop'},createDevelop:false})`);assert.equal(configured.error,undefined);
    // Re-open through the actual React UI using its native picker replacement in this test window.
    await window.webContents.executeJavaScript(`document.querySelector('.repo-picker').click()`);
   } catch(error) {console.error(error);finish(1)}

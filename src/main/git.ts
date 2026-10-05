@@ -5,7 +5,7 @@ import { branchKind, flow, type BranchKind, type ChangedFile, type FlowConfig, t
 
 export function git(cwd: string, args: string[], timeout = 30000): Promise<string> {
   return new Promise((resolve, reject) => execFile('git', ['-c', 'core.quotepath=false', ...args], { cwd, encoding: 'utf8', timeout, maxBuffer: 4 * 1024 * 1024, env: { ...process.env, GIT_TERMINAL_PROMPT: '0', GIT_LITERAL_PATHSPECS: '1' } }, (error, stdout, stderr) => {
-    if (error) reject(new Error((stderr || error.message).trim() + (/authentication|permission denied|could not read Username/i.test(stderr) ? '\nConfigure your Git credentials outside Git Sky, then retry.' : '')));
+    if (error) reject(new Error((stderr || error.message).trim() + (/authentication|permission denied|could not read Username/i.test(stderr) ? '\nConfigure your Git credentials outside Lantern, then retry.' : '')));
     else resolve(stdout);
   }));
 }

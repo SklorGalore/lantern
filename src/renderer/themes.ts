@@ -37,7 +37,7 @@ export const builtInThemes: Theme[] = [
     overlay: '#110a19b0', shadow: '#00000040',
   } },
 ];
-export const storageKey = 'git-sky-themes-v1';
+export const storageKey = 'lantern-themes-v1';
 export const maxThemeBytes = 32 * 1024;
 const isObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 export function parseTheme(text: string): Omit<Theme, 'id'> {

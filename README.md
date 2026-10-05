@@ -1,4 +1,4 @@
-# Git Sky
+# Lantern
 
 A local desktop companion for beginner-friendly Git Flow. Built with Electron, React, and TypeScript for macOS, Windows, and Linux.
 
@@ -11,7 +11,7 @@ npm install
 npm start
 ```
 
-Git must be available on the application's PATH. Configure your Git identity and SSH keys or credential helper outside the app. Git Sky does not collect hosting credentials. It uses the `origin` remote.
+Git must be available on the application's PATH. Configure your Git identity and SSH keys or credential helper outside the app. Lantern does not collect hosting credentials. It uses the `origin` remote.
 
 ## Workflow
 
@@ -55,6 +55,10 @@ A minimal theme looks like this:
 
 The base (`sky`, `midnight`, `forest`, `sand`, or `plum`) supplies unspecified colors and the light/dark mode for native controls. The downloaded template includes every supported color key. Colors must use `#RRGGBB` or `#RRGGBBAA`; files must be valid JSON no larger than 32 KB with a name of 1–60 characters. Use readable text/background combinations, especially for accents and status colors. Invalid uploads leave your current theme intact. Files are read locally; theme uploads do not contact a server.
 
+## App icon
+
+The editable lantern mark lives in `src/renderer/public/lantern.svg`. Run `npm run icons` on a desktop session after editing it to regenerate the PNG, Windows ICO, and macOS ICNS files in `assets/`. These are used by the app window and packaged applications.
+
 ## Checks and packaging
 
 ```sh
@@ -77,7 +81,7 @@ Git integration tests create disposable local repositories and bare remotes. The
 
 Electron uses a sandboxed, context-isolated preload and validates the IPC sender. Git runs with argument arrays without a shell. Diffs disable external diff drivers and text conversion. Repository content is rendered as text. Git hooks and configured credential helpers still run as they normally do in Git; use trusted repositories.
 
-Recent repositories, workflow settings, and confirmations are stored in Electron's user data directory. Git Sky has no application server, account, analytics, or cloud storage.
+Recent repositories, workflow settings, and confirmations are stored in Electron's user data directory. Lantern has no application server, account, analytics, or cloud storage.
 
 Supported v1 repositories have an initial commit and use an origin remote. Submodule management, worktree management, empty-repository initialization, hosting API authentication, in-app conflict resolution, and automated version bumps are outside this release.
 

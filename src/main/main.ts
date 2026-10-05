@@ -40,13 +40,15 @@ async function handle(request: Request): Promise<Reply> {
   }
   return state();
 }
+const appIcon = path.join(__dirname, '../../../assets/lantern.png');
 app.whenReady().then(async () => {
+  if (process.platform === 'darwin') app.dock?.setIcon(appIcon);
   try { const parsed = JSON.parse(await readFile(settingsFile(), 'utf8')); if (Array.isArray(parsed.recent) && parsed.repos && typeof parsed.repos === 'object') settings = parsed; } catch { /* first launch */ }
-  ipcMain.handle('git-sky', (event, request: Request) => {
+  ipcMain.handle('lantern', (event, request: Request) => {
     if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) throw new Error('Untrusted sender.');
     const result = queue.then(async () => { try { return await handle(request); } catch (error) { return { error: error instanceof Error ? error.message : String(error) }; } }); queue = result.then(() => undefined); return result;
   });
-  function createWindow() { window = new BrowserWindow({ width: 1320, height: 880, minWidth: 1000, minHeight: 700, backgroundColor: '#f5f6fa', title: 'Git Sky', webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } }); window.webContents.setWindowOpenHandler(() => ({ action: 'deny' })); window.webContents.on('will-navigate', event => event.preventDefault()); void window.loadFile(path.join(__dirname, '../../renderer/index.html')); }
+  function createWindow() { window = new BrowserWindow({ width: 1320, height: 880, minWidth: 1000, minHeight: 700, backgroundColor: '#f5f6fa', title: 'Lantern', icon: appIcon, webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } }); window.webContents.setWindowOpenHandler(() => ({ action: 'deny' })); window.webContents.on('will-navigate', event => event.preventDefault()); void window.loadFile(path.join(__dirname, '../../renderer/index.html')); }
   createWindow(); app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
