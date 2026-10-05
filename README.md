@@ -32,6 +32,29 @@ Open pull requests through the hosting website. Merge completion is **confirmed 
 
 Conflicts, unfinished Git operations, detached HEAD, and divergent histories are handed off to an editor or terminal. The editor shortcut uses VS Code's `code` command; Open folder works with other editors. The Linux terminal shortcut uses `x-terminal-emulator`.
 
+## Themes
+
+Open **Themes** in the sidebar to choose Sky, Midnight, Forest, Sand, or Plum. Themes apply throughout the app, including dialogs and diffs, and your selection is saved locally across restarts.
+
+To add your own palette, choose **Download template**, edit the JSON file, then choose **Upload theme**. Successful uploads are selected immediately and kept alongside the built-in themes. **Remove selected theme** deletes a custom palette and returns to Sky.
+
+A minimal theme looks like this:
+
+```json
+{
+  "version": 1,
+  "name": "Ocean",
+  "base": "midnight",
+  "colors": {
+    "accent": "#80d4ed",
+    "accentHover": "#a5e6f7",
+    "accentText": "#132b35"
+  }
+}
+```
+
+The base (`sky`, `midnight`, `forest`, `sand`, or `plum`) supplies unspecified colors and the light/dark mode for native controls. The downloaded template includes every supported color key. Colors must use `#RRGGBB` or `#RRGGBBAA`; files must be valid JSON no larger than 32 KB with a name of 1–60 characters. Use readable text/background combinations, especially for accents and status colors. Invalid uploads leave your current theme intact. Files are read locally; theme uploads do not contact a server.
+
 ## Checks and packaging
 
 ```sh
@@ -40,7 +63,7 @@ npm test
 npm run make
 ```
 
-`npm run smoke` launches a temporary Electron window, verifies the real renderer and preload against a disposable repository, saves `out/smoke.png`, and closes. It requires a desktop session. Node 22 or 24 is required for packaging; Node 26 was observed exiting Forge without an artifact.
+`npm run smoke` launches a temporary Electron window, verifies the real renderer and preload against a disposable repository, saves `out/smoke.png`, checks theme selection, custom uploads, persistence, and removal, and closes. It requires a desktop session. Node 22 or 24 is required for packaging; Node 26 was observed exiting Forge without an artifact.
 
 `npm run make` creates an unsigned ZIP application for the current platform under `out/make`. The GitHub Actions matrix runs checks and builds ZIPs on macOS, Windows, and Linux. Cross-platform checks require those runners; a local macOS build does not verify Windows or Linux behavior. Signing, installers, and auto-update distribution are not configured.
 

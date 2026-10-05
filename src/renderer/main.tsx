@@ -2,11 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { branchKind, descriptions, flow, kinds, defaults, type BranchKind, type Bridge, type FlowConfig, type HomeState, type RepoState, type Request, type Reply } from '../shared';
 import './style.css';
+import { ThemePicker } from './ThemePicker';
+import { applyTheme, builtInThemes, loadThemes, storageKey, type ThemeSettings } from './themes';
+const initialThemes = (() => { try { return loadThemes(window.localStorage); } catch { return { selected: 'sky', custom: [] }; } })();
+applyTheme([...builtInThemes, ...initialThemes.custom].find(theme => theme.id === initialThemes.selected)!);
 declare global { interface Window { gitSky: Bridge } }
 function App() {
+  const [themes, setThemes] = useState<ThemeSettings>(initialThemes);
+  function saveThemes(next: ThemeSettings) {
+    window.localStorage.setItem(storageKey, JSON.stringify(next));
+    applyTheme([...builtInThemes, ...next.custom].find(theme => theme.id === next.selected)!);
+    setThemes(next);
+  }
   const [home, setHome] = useState<HomeState>(); const [repo, setRepo] = useState<RepoState>();
   const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [notice, setNotice] = useState('');
-  const [page, setPage] = useState<'changes' | 'finish'>('changes'); const [modal, setModal] = useState<'' | 'clone' | 'setup' | 'branch' | 'commit'>('');
+  const [page, setPage] = useState<'changes' | 'finish'>('changes'); const [modal, setModal] = useState<'' | 'clone' | 'setup' | 'branch' | 'commit' | 'themes'>('');
   const [url, setUrl] = useState(''); const [config, setConfig] = useState<FlowConfig>(defaults); const [createDevelop, setCreateDevelop] = useState(true);
   const [kind, setKind] = useState<BranchKind>('feature'); const [name, setName] = useState('');
   const [selected, setSelected] = useState<string[]>([]); const [activeFile, setActiveFile] = useState(''); const [diff, setDiff] = useState(''); const [message, setMessage] = useState('');
@@ -21,7 +31,7 @@ function App() {
     if (!modal) return;
     const previous = document.activeElement as HTMLElement | null;
     const dialog = document.querySelector<HTMLElement>('.modal');
-    const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled)') || []);
+    const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled):not([hidden]), textarea:not(:disabled), select:not(:disabled)') || []);
     focusable().find(e => !e.classList.contains('modal-close'))?.focus();
     const keydown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !busy) setModal('');
@@ -50,7 +60,7 @@ function App() {
       <button className="repo-picker" disabled={busy} onClick={() => void open()}><span className="folder-icon">▱</span><span>{repo?.name || 'Open a repository'}<small>{repo ? 'Switch repository' : 'Choose a local folder'}</small></span><span>⌄</span></button>
       <nav><button className={page === 'changes' ? 'nav active' : 'nav'} onClick={() => setPage('changes')}><span>▤</span> Changes {repo && <b>{repo.files.length}</b>}</button><button className={page === 'finish' ? 'nav active' : 'nav'} disabled={!repo} onClick={() => setPage('finish')}><span>⑂</span> Finish & merge</button></nav>
       <div className="sidebar-label flow-label">THE GIT FLOW</div><div className="flow-map"><div><i className="dot production"/>Production <code>{repo?.config.production || 'main'}</code></div><div className="flow-connector"/><div><i className="dot develop"/>Integration <code>{repo?.config.development || 'develop'}</code></div><div className="flow-connector"/>{kinds.map(k => <div className="flow-type" key={k}><i className={`dot ${k}`}/>{k}<span>/</span></div>)}</div>
-      <div className="sidebar-bottom"><div className="local-indicator"><i/> Local-first. Your code stays yours.</div><button className="text-button" disabled={!repo || busy} onClick={() => { if(repo) setConfig(repo.config); setModal('setup'); }}>⚙ Workflow settings</button><span className="version">Git Sky · v0.1</span></div>
+      <div className="sidebar-bottom"><div className="local-indicator"><i/> Local-first. Your code stays yours.</div><button className="text-button" disabled={!repo || busy} onClick={() => { if(repo) setConfig(repo.config); setModal('setup'); }}>⚙ Workflow settings</button><button className="text-button theme-settings" onClick={() => setModal('themes')}>◐ Themes</button><span className="version">Git Sky · v0.1</span></div>
     </aside>
     <main><header><div className="breadcrumbs">Workspace <span>/</span> {repo?.name || 'Welcome'}</div><div className="header-actions">{repo && <><span className="remote-pill"><i className={repo.remote ? 'online' : ''}/>{repo.remote ? 'origin connected' : 'No remote'}</span>{actionButton('↻ Refresh', {action:'refresh'})}</>}</div></header>
       <div className="content">{error && <div role="alert" className="alert error"><strong>Let’s get this sorted</strong><pre>{error}</pre><button onClick={() => setError('')}>Dismiss</button></div>}{notice && <div role="status" className="alert success">✓ {notice}</div>}{busy && <div className="activity" role="status">Working with Git…</div>}
@@ -67,6 +77,7 @@ function App() {
       </> }</div>
     </main>
     {modal && <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button aria-label="Close dialog" className="modal-close" disabled={busy} onClick={() => setModal('')}>×</button>
+      {modal === 'themes' && <ThemePicker settings={themes} onChange={saveThemes}/>}
       {modal === 'clone' && <><span className="eyebrow">BRING YOUR CODE HOME</span><h2 id="modal-title">Clone a repository</h2><p>Paste an HTTPS or SSH URL. Next, choose a new local folder. Your existing Git credentials will be used.</p><label htmlFor="clone-url">Repository URL</label><input id="clone-url" autoFocus placeholder="https://github.com/team/project.git" value={url} onChange={e => setUrl(e.target.value)}/><button className="primary full" disabled={busy || !url.trim()} onClick={() => void submit({action:'clone',url:url.trim()},'Repository cloned. Welcome aboard.')}>Choose destination & clone</button></>}
       {modal === 'setup' && <><span className="eyebrow">A HOME FOR EVERY CHANGE</span><h2 id="modal-title">Set up your Git Flow</h2><p>Production holds released code. Development brings upcoming work together.</p><label htmlFor="production">Production branch</label><input id="production" value={config.production} onChange={e => setConfig({...config,production:e.target.value})}/><label htmlFor="development">Development branch</label><input id="development" value={config.development} onChange={e => setConfig({...config,development:e.target.value})}/><label className="checkbox-label"><input type="checkbox" checked={createDevelop} onChange={e => setCreateDevelop(e.target.checked)}/> Create and push the development branch if missing</label><p className="hint">A missing development branch is restored from origin when available; otherwise it starts from synchronized production. Creating a missing branch requires a clean working directory.</p><button className="primary full" disabled={busy || (!!repo?.files.length && !repo.branches.includes(config.development)) || !config.production || !config.development} onClick={() => void submit({action:'configure',config,createDevelop},'Git Flow is ready.')}>Save workflow</button>{!!repo?.files.length && !repo.branches.includes(config.development) && <p className="hint">Commit or resolve existing changes outside the app before creating a branch.</p>}</>}
       {modal === 'branch' && <><span className="eyebrow">EVERY GOOD CHANGE STARTS HERE</span><h2 id="modal-title">What are you working on?</h2><div className="kind-options">{kinds.map(k => <button className={kind===k?'kind-option chosen':'kind-option'} key={k} onClick={() => setKind(k)}><i className={`dot ${k}`}/><strong>{k}</strong><small>{descriptions[k]}</small></button>)}</div><label htmlFor="branch-name">{kind === 'release' || kind === 'hotfix' ? 'Version' : 'Short name'}</label><div className="branch-input"><span>{kind}/</span><input autoFocus id="branch-name" placeholder={kind === 'release' || kind === 'hotfix' ? '1.2.0' : 'welcome-screen'} value={name} onChange={e => setName(e.target.value)}/></div><p>Start from <code>{flow(kind,repo!.config).base}</code>. Merge into <code>{flow(kind,repo!.config).targets.join(' + ')}</code>.</p><p className="hint">We’ll fetch origin and fast-forward the starting branch if needed, then create your branch.</p><button className="primary full" disabled={busy || !name.trim()} onClick={() => void submit({action:'create',kind,name},'Your working branch is ready.')}>Create {kind} branch</button></>}
