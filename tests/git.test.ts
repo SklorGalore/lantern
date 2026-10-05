@@ -50,3 +50,46 @@ test('rejected pushes preserve local history and working files',async t=>{
  await writeFile(path.join(local,'local.txt'),'local');const s=await repo.snapshot();await repo.commit(['local.txt'],'Local',s.head,JSON.stringify(s.files));const before=(await repo.snapshot()).head;await assert.rejects(repo.push(),/rejected/);assert.equal((await repo.snapshot()).head,before);assert.equal(await readFile(path.join(local,'local.txt'),'utf8'),'local');
 });
 test('missing identity prevents a commit without altering staging',async t=>{const {repo,local}=await fixture(t);await repo.create('fix','identity');await git(local,['config','user.name','']);await git(local,['config','user.email','']);await writeFile(path.join(local,'hello.txt'),'change');await git(local,['add','.']);const s=await repo.snapshot();assert.equal(s.identity,false);await assert.rejects(repo.commit(['hello.txt'],'save',s.head,JSON.stringify(s.files)),/identity|user.name/);assert.equal((await repo.files())[0].staged,true);});
+test('local Git Flow initializes and starts every branch type without origin', async t => {
+ const { repo, local } = await fixture(t);
+ await git(local, ['remote', 'remove', 'origin']);
+ await git(local, ['branch', '-d', 'develop']);
+ const head = (await repo.snapshot()).head;
+ await repo.configure(defaults, true);
+ assert.equal((await git(local, ['rev-parse', 'develop'])).trim(), head);
+ assert.equal((await repo.snapshot()).branch, 'main');
+ for (const kind of kinds) {
+  await repo.create(kind, 'local-work');
+  const state = await repo.snapshot();
+  assert.equal(state.branch, `${kind}/local-work`);
+  assert.equal(state.head, head);
+  assert.equal(state.remote, '');
+  assert.equal(state.upstream, '');
+ }
+ await writeFile(path.join(local, 'local.txt'), 'local change');
+ const before = await repo.snapshot();
+ await repo.commit(['local.txt'], 'Save local work', before.head, JSON.stringify(before.files));
+ assert.notEqual((await repo.snapshot()).head, before.head);
+});
+test('local initialization preserves the current branch, staging, and uncommitted files', async t => {
+ const { repo, local } = await fixture(t);
+ await git(local, ['remote', 'remove', 'origin']);
+ await git(local, ['branch', '-d', 'develop']);
+ await git(local, ['switch', '-c', 'feature/existing']);
+ await writeFile(path.join(local, 'hello.txt'), 'staged change');
+ await git(local, ['add', 'hello.txt']);
+ await writeFile(path.join(local, 'hello.txt'), 'additional unstaged change');
+ await writeFile(path.join(local, 'untracked.txt'), 'untracked change');
+ const before = await repo.snapshot();
+ const index = await git(local, ['diff', '--cached']);
+ await assert.rejects(repo.configure(defaults, false), /Enable creation/);
+ await repo.configure(defaults, true);
+ const after = await repo.snapshot();
+ assert.equal(after.branch, before.branch);
+ assert.equal(after.head, before.head);
+ assert.deepEqual(after.files, before.files);
+ assert.equal(await git(local, ['diff', '--cached']), index);
+ assert.equal(await readFile(path.join(local, 'hello.txt'), 'utf8'), 'additional unstaged change');
+ assert.equal(await readFile(path.join(local, 'untracked.txt'), 'utf8'), 'untracked change');
+ await assert.rejects(repo.create('feature', 'needs-clean-worktree'), /Commit your changes/);
+});

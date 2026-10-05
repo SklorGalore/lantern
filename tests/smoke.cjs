@@ -8,7 +8,7 @@ const root = mkdtempSync(path.join(os.tmpdir(), 'git-sky-smoke-'));
 const repo = path.join(root, 'stellar-notes');
 mkdirSync(repo); const git = (...args) => execFileSync('git', args, { cwd: repo, stdio: 'pipe' });
 git('init','--initial-branch=main');git('config','user.name','Smoke Test');git('config','user.email','smoke@example.invalid');
-writeFileSync(path.join(repo,'README.md'),'# Stellar Notes\n\nA home for your next idea.\n');git('add','.');git('commit','-m','Initial');git('branch','develop');git('switch','-c','feature/welcome-screen');
+writeFileSync(path.join(repo,'README.md'),'# Stellar Notes\n\nA home for your next idea.\n');git('add','.');git('commit','-m','Initial');git('switch','-c','feature/welcome-screen');
 writeFileSync(path.join(repo,'README.md'),'# Stellar Notes\n\nA home for your next idea.\n\nWelcome to your workspace.\n');
 app.setPath('userData',path.join(root,'settings'));
 let ended = false;
@@ -20,7 +20,7 @@ app.on('browser-window-created',(_event,window)=>{
   try {
    const initial = await window.webContents.executeJavaScript('document.body.innerText');assert.match(initial,/Good ideas deserve/);
    const opened = await window.webContents.executeJavaScript(`window.gitSky.request({action:'open',path:${JSON.stringify(repo)}})`);assert.equal(opened.repo.branch,'feature/welcome-screen');
-   const configured = await window.webContents.executeJavaScript(`window.gitSky.request({action:'configure',config:{production:'main',development:'develop'},createDevelop:false})`);assert.equal(configured.error,undefined);
+   const configured = await window.webContents.executeJavaScript(`window.gitSky.request({action:'configure',config:{production:'main',development:'develop'},createDevelop:true})`);assert.equal(configured.error,undefined);assert.equal(configured.repo.configured,true);assert.ok(configured.repo.branches.includes('develop'));assert.equal(configured.repo.remote,'');assert.equal(configured.repo.branch,'feature/welcome-screen');
    // Re-open through the actual React UI using its native picker replacement in this test window.
    await window.webContents.executeJavaScript(`document.querySelector('.repo-picker').click()`);
   } catch(error) {console.error(error);finish(1)}

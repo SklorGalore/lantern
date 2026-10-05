@@ -49,7 +49,11 @@ export class Repository {
   async syncBase(base: string) {
     await this.validateBranch(base); await this.guard(true);
     const remote = await optional(this.cwd, ['remote', 'get-url', 'origin']);
-    if (!remote) throw new Error('Add an origin remote in your terminal before starting work.');
+    if (!remote) {
+      if (!(await optional(this.cwd, ['rev-parse', '--verify', `refs/heads/${base}`]))) throw new Error(`The local starting branch ${base} is missing. Check your workflow settings.`);
+      await git(this.cwd, ['switch', base]);
+      return;
+    }
     await this.fetch();
     const remoteRef = `refs/remotes/origin/${base}`;
     if (!(await optional(this.cwd, ['rev-parse', '--verify', remoteRef]))) throw new Error(`Publish ${base} to origin first so the starting point can be synchronized.`);
@@ -74,12 +78,18 @@ export class Repository {
     await this.guard();
     if (!(await optional(this.cwd, ['rev-parse', '--verify', `refs/heads/${config.production}`]))) throw new Error('The production branch must exist locally.');
     if (!(await optional(this.cwd, ['rev-parse', '--verify', `refs/heads/${config.development}`]))) {
-      await this.guard(true);
       if (!createDevelop) throw new Error('Enable creation of the missing development branch.');
-      await this.fetch();
-      if (await optional(this.cwd, ['rev-parse', '--verify', `refs/remotes/origin/${config.development}`])) await git(this.cwd, ['branch', '--track', config.development, `origin/${config.development}`]);
-      else { await this.syncBase(config.production); await git(this.cwd, ['branch', config.development, config.production]); }
-      await git(this.cwd, ['push', '-u', 'origin', `refs/heads/${config.development}:refs/heads/${config.development}`], 120000);
+      const remote = await optional(this.cwd, ['remote', 'get-url', 'origin']);
+      if (!remote) {
+        // Creating a ref does not touch HEAD, the index, or working files.
+        await git(this.cwd, ['branch', config.development, config.production]);
+      } else {
+        await this.guard(true);
+        await this.fetch();
+        if (await optional(this.cwd, ['rev-parse', '--verify', `refs/remotes/origin/${config.development}`])) await git(this.cwd, ['branch', '--track', config.development, `origin/${config.development}`]);
+        else { await this.syncBase(config.production); await git(this.cwd, ['branch', config.development, config.production]); }
+        await git(this.cwd, ['push', '-u', 'origin', `refs/heads/${config.development}:refs/heads/${config.development}`], 120000);
+      }
     }
     this.config = config;
   }
