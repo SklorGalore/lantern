@@ -1,0 +1,28 @@
+name: Desktop checks
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run smoke
+        if: runner.os != 'Linux'
+      - run: xvfb-run --auto-servernum npm run smoke
+        if: runner.os == 'Linux'
+      - run: npm run make
+      - uses: actions/upload-artifact@v4
+        with:
+          name: git-sky-${{ matrix.os }}
+          path: out/make/**/*.zip

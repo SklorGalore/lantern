@@ -1,0 +1,1 @@
+module.exports = { packagerConfig: { asar: true, executableName: 'git-sky', ignore: [/^\/src($|\/)/, /^\/tests($|\/)/, /^\/.github($|\/)/] }, makers: [{ name: '@electron-forge/maker-zip', platforms: ['darwin', 'win32', 'linux'] }] };
