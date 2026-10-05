@@ -24,5 +24,5 @@ jobs:
       - run: npm run make
       - uses: actions/upload-artifact@v4
         with:
-          name: git-sky-${{ matrix.os }}
+          name: lantern-${{ matrix.os }}
           path: out/make/**/*.zip

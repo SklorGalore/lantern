@@ -1,1 +1,1 @@
-module.exports = { packagerConfig: { asar: true, executableName: 'git-sky', ignore: [/^\/src($|\/)/, /^\/tests($|\/)/, /^\/.github($|\/)/] }, makers: [{ name: '@electron-forge/maker-zip', platforms: ['darwin', 'win32', 'linux'] }] };
+module.exports = { packagerConfig: { asar: true, executableName: 'lantern', icon: require('node:path').join(__dirname, 'assets', 'lantern'), ignore: [/^\/src($|\/)/, /^\/tests($|\/)/, /^\/.github($|\/)/] }, makers: [{ name: '@electron-forge/maker-zip', platforms: ['darwin', 'win32', 'linux'] }] };

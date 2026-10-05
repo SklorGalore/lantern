@@ -6,10 +6,10 @@ import os from 'node:os';
 import { git, Repository, parseStatus, hostingUrl } from '../src/main/git';
 import { defaults, flow, kinds } from '../src/shared';
 async function fixture(t: { after(fn: () => Promise<void>): void }) {
- const root = await mkdtemp(path.join(os.tmpdir(), 'git-sky-test-')); t.after(() => rm(root,{recursive:true,force:true}));
+ const root = await mkdtemp(path.join(os.tmpdir(), 'lantern-test-')); t.after(() => rm(root,{recursive:true,force:true}));
  const remote = path.join(root,'origin.git'), local = path.join(root,'working tree'); await mkdir(remote); await mkdir(local);
  await git(remote,['init','--bare','--initial-branch=main']); await git(local,['init','--initial-branch=main']);
- await git(local,['config','user.name','Git Sky Test']); await git(local,['config','user.email','test@example.invalid']);
+ await git(local,['config','user.name','Lantern Test']); await git(local,['config','user.email','test@example.invalid']);
  await writeFile(path.join(local,'hello.txt'),'hello\n'); await git(local,['add','.']); await git(local,['commit','-m','Initial']); await git(local,['remote','add','origin',remote]); await git(local,['push','-u','origin','main']);
  const repo = new Repository(local,{...defaults}); await repo.configure(defaults,true); return {repo,root,remote,local};
 }

@@ -1,13 +1,14 @@
 {
-  "name": "git-sky",
-  "productName": "Git Sky",
+  "name": "lantern",
+  "productName": "Lantern",
   "version": "0.1.0",
   "private": true,
   "description": "A friendly desktop companion for Git Flow",
-  "author": "Git Sky",
+  "author": "Lantern",
   "license": "MIT",
   "main": "dist/main/main/main.js",
   "scripts": {
+    "icons": "electron scripts/build-icons.cjs",
     "build": "tsc -p tsconfig.main.json && vite build",
     "start": "npm run build && electron .",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.main.json --noEmit",

@@ -1,4 +1,4 @@
-# Git Sky
+# Lantern
 
 A local desktop companion for beginner-friendly Git Flow. Built with Electron, React, and TypeScript for macOS, Windows, and Linux.
 
@@ -11,7 +11,7 @@ npm install
 npm start
 ```
 
-Git must be available on the application's PATH. Configure your Git identity and SSH keys or credential helper outside the app. Git Sky does not collect hosting credentials. It uses the `origin` remote.
+Git must be available on the application's PATH. Configure your Git identity and SSH keys or credential helper outside the app. Lantern does not collect hosting credentials. It uses the `origin` remote.
 
 ## Workflow
 
@@ -32,6 +32,33 @@ Open pull requests through the hosting website. Merge completion is **confirmed 
 
 Conflicts, unfinished Git operations, detached HEAD, and divergent histories are handed off to an editor or terminal. The editor shortcut uses VS Code's `code` command; Open folder works with other editors. The Linux terminal shortcut uses `x-terminal-emulator`.
 
+## Themes
+
+Open **Themes** in the sidebar to choose Sky, Midnight, Forest, Sand, or Plum. Themes apply throughout the app, including dialogs and diffs, and your selection is saved locally across restarts.
+
+To add your own palette, choose **Download template**, edit the JSON file, then choose **Upload theme**. Successful uploads are selected immediately and kept alongside the built-in themes. **Remove selected theme** deletes a custom palette and returns to Sky.
+
+A minimal theme looks like this:
+
+```json
+{
+  "version": 1,
+  "name": "Ocean",
+  "base": "midnight",
+  "colors": {
+    "accent": "#80d4ed",
+    "accentHover": "#a5e6f7",
+    "accentText": "#132b35"
+  }
+}
+```
+
+The base (`sky`, `midnight`, `forest`, `sand`, or `plum`) supplies unspecified colors and the light/dark mode for native controls. The downloaded template includes every supported color key. Colors must use `#RRGGBB` or `#RRGGBBAA`; files must be valid JSON no larger than 32 KB with a name of 1–60 characters. Use readable text/background combinations, especially for accents and status colors. Invalid uploads leave your current theme intact. Files are read locally; theme uploads do not contact a server.
+
+## App icon
+
+The editable lantern mark lives in `src/renderer/public/lantern.svg`. Run `npm run icons` on a desktop session after editing it to regenerate the PNG, Windows ICO, and macOS ICNS files in `assets/`. These are used by the app window and packaged applications.
+
 ## Checks and packaging
 
 ```sh
@@ -40,7 +67,7 @@ npm test
 npm run make
 ```
 
-`npm run smoke` launches a temporary Electron window, verifies the real renderer and preload against a disposable repository, saves `out/smoke.png`, and closes. It requires a desktop session. Node 22 or 24 is required for packaging; Node 26 was observed exiting Forge without an artifact.
+`npm run smoke` launches a temporary Electron window, verifies the real renderer and preload against a disposable repository, saves `out/smoke.png`, checks theme selection, custom uploads, persistence, and removal, and closes. It requires a desktop session. Node 22 or 24 is required for packaging; Node 26 was observed exiting Forge without an artifact.
 
 `npm run make` creates an unsigned ZIP application for the current platform under `out/make`. The GitHub Actions matrix runs checks and builds ZIPs on macOS, Windows, and Linux. Cross-platform checks require those runners; a local macOS build does not verify Windows or Linux behavior. Signing, installers, and auto-update distribution are not configured.
 
@@ -54,7 +81,7 @@ Git integration tests create disposable local repositories and bare remotes. The
 
 Electron uses a sandboxed, context-isolated preload and validates the IPC sender. Git runs with argument arrays without a shell. Diffs disable external diff drivers and text conversion. Repository content is rendered as text. Git hooks and configured credential helpers still run as they normally do in Git; use trusted repositories.
 
-Recent repositories, workflow settings, and confirmations are stored in Electron's user data directory. Git Sky has no application server, account, analytics, or cloud storage.
+Recent repositories, workflow settings, and confirmations are stored in Electron's user data directory. Lantern has no application server, account, analytics, or cloud storage.
 
 Supported v1 repositories have an initial commit. An origin remote is required only for remote operations. Submodule management, worktree management, empty-repository initialization, hosting API authentication, in-app conflict resolution, and automated version bumps are outside this release.
 

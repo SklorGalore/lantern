@@ -19,4 +19,5 @@ export type Request =
  | { action: 'website'; target?: string }
  | { action: 'confirm'; target: string; checked: boolean };
 export interface Reply { home?: HomeState; repo?: RepoState; diff?: string; cancelled?: boolean; error?: string }
-export interface Bridge { request(request: Request): Promise<Reply> }
+export interface WindowTheme { background: string; text: string; scheme: 'light' | 'dark' }
+export interface Bridge { request(request: Request): Promise<Reply>; setWindowTheme(theme: WindowTheme): void }

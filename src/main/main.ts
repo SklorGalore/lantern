@@ -1,8 +1,8 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from 'electron';
 import { readFile, writeFile, mkdir, rename, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { execFile, spawn } from 'node:child_process';
-import { defaults, flow, branchKind, type FlowConfig, type Request, type Reply } from '../shared';
+import { defaults, flow, branchKind, type FlowConfig, type Request, type Reply, type WindowTheme } from '../shared';
 import { git, optional, Repository, hostingUrl } from './git';
 interface Settings { recent: string[]; repos: Record<string, { config: FlowConfig; confirmations: Record<string, string[]> }> }
 let settings: Settings = { recent: [], repos: {} }; let repository: Repository | undefined; let window: BrowserWindow; let queue = Promise.resolve();
@@ -40,13 +40,34 @@ async function handle(request: Request): Promise<Reply> {
   }
   return state();
 }
+const appIcon = path.join(__dirname, '../../../assets/lantern.png');
 app.whenReady().then(async () => {
+  if (process.platform === 'darwin') app.dock?.setIcon(appIcon);
   try { const parsed = JSON.parse(await readFile(settingsFile(), 'utf8')); if (Array.isArray(parsed.recent) && parsed.repos && typeof parsed.repos === 'object') settings = parsed; } catch { /* first launch */ }
-  ipcMain.handle('git-sky', (event, request: Request) => {
+  ipcMain.handle('lantern', (event, request: Request) => {
     if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) throw new Error('Untrusted sender.');
     const result = queue.then(async () => { try { return await handle(request); } catch (error) { return { error: error instanceof Error ? error.message : String(error) }; } }); queue = result.then(() => undefined); return result;
   });
-  function createWindow() { window = new BrowserWindow({ width: 1320, height: 880, minWidth: 1000, minHeight: 700, backgroundColor: '#f5f6fa', title: 'Git Sky', webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } }); window.webContents.setWindowOpenHandler(() => ({ action: 'deny' })); window.webContents.on('will-navigate', event => event.preventDefault()); void window.loadFile(path.join(__dirname, '../../renderer/index.html')); }
+  ipcMain.on('lantern:window-theme', (event, theme: WindowTheme) => {
+    if (event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame) return;
+    if (!theme || !['light', 'dark'].includes(theme.scheme) ||
+      typeof theme.background !== 'string' || !/^#[\da-f]{6}([\da-f]{2})?$/i.test(theme.background) ||
+      typeof theme.text !== 'string' || !/^#[\da-f]{6}([\da-f]{2})?$/i.test(theme.text)) return;
+    nativeTheme.themeSource = theme.scheme;
+    window.setBackgroundColor(theme.background);
+    if (process.platform !== 'darwin') window.setTitleBarOverlay({ color: theme.background, symbolColor: theme.text });
+  });
+  function createWindow() {
+    window = new BrowserWindow({ width: 1320, height: 880, minWidth: 1000, minHeight: 700,
+      show: false, backgroundColor: '#ffffff', title: 'Lantern', icon: appIcon,
+      titleBarStyle: 'hidden',
+      ...(process.platform === 'darwin' ? { trafficLightPosition: { x: 12, y: 11 } } : { titleBarOverlay: { color: '#ffffff', symbolColor: '#26334a', height: 36 } }),
+      webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
+    window.once('ready-to-show', () => window.show());
+    window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    window.webContents.on('will-navigate', event => event.preventDefault());
+    void window.loadFile(path.join(__dirname, '../../renderer/index.html'));
+  }
   createWindow(); app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
