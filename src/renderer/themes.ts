@@ -75,4 +75,5 @@ export function loadThemes(storage: Pick<Storage, 'getItem'>): ThemeSettings {
 export function applyTheme(theme: Theme) {
   for (const [key, value] of Object.entries(theme.colors)) document.documentElement.style.setProperty(`--${key}`, value);
   document.documentElement.style.colorScheme = theme.scheme;
+  window.lantern.setWindowTheme({ background: theme.colors.surface, text: theme.colors.text, scheme: theme.scheme });
 }

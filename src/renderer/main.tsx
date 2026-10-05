@@ -56,6 +56,7 @@ function App() {
   async function submit(input: Request, success: string) { const r = await request(input, success); if (!r.error && !r.cancelled) setModal(r.repo && !r.repo.configured ? 'setup' : ''); }
   const actionButton = (label: string, action: Request, disabled = false, primary = false) => <button className={primary ? 'primary' : ''} disabled={busy || disabled} onClick={() => void request(action, label === 'Push branch' ? 'Your branch has been pushed to origin.' : undefined)}>{label}</button>;
   return <div className="app">
+    <div className="titlebar">Lantern</div>
     <aside className="sidebar"><div className="brand"><img className="brand-icon" src="./lantern.svg" alt="" aria-hidden="true"/><span>Lantern<span className="brand-dot">.</span></span></div><div className="sidebar-label">YOUR WORKSPACE</div>
       <button className="repo-picker" disabled={busy} onClick={() => void open()}><span className="folder-icon">▱</span><span>{repo?.name || 'Open a repository'}<small>{repo ? 'Switch repository' : 'Choose a local folder'}</small></span><span>⌄</span></button>
       <nav><button className={page === 'changes' ? 'nav active' : 'nav'} onClick={() => setPage('changes')}><span>▤</span> Changes {repo && <b>{repo.files.length}</b>}</button><button className={page === 'finish' ? 'nav active' : 'nav'} disabled={!repo} onClick={() => setPage('finish')}><span>⑂</span> Finish & merge</button></nav>
